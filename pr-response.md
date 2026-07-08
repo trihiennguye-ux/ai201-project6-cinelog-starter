@@ -37,8 +37,28 @@ pytest tests/ -v
 
 ## Comment 4 — Default visibility
 **My position:**
+I recommend changing the default to `public=False` (private-by-default). If we keep `public=True`, we should explicitly document and surface that choice in the UI and onboarding so users are not surprised.
+
 **Reasoning:**
+- Privacy-first UX: Most users expect personal lists (watchlists, playlists, bookmarks) to be private unless they knowingly share them. Defaulting to private minimizes accidental sharing and helps build user trust.
+- Minimize accidental exposure: New or casual users are likelier to add items without considering visibility; private-by-default prevents inadvertent public exposure of their preferences or viewing plans.
+- Legal and reputational safety: Making private the default reduces risk around sensitive content or identifiable patterns being public, which can be important for compliance or user comfort.
+- Opt-in for discoverability: Social features (discover, follow, public collections) are valuable, but they work well when users explicitly opt in — that action signals intent and increases the quality of public content.
+
 **Tradeoff acknowledged:**
+- Reduced passive discoverability: `public=True` by default helps surface content and bootstraps social features (recommendations, curated lists) earlier. With `public=False` fewer items will be available for aggregation and discovery out of the box.
+- Slightly higher friction for sharing: Users who intended to share immediately must take an extra step to toggle visibility.
+
+**Mitigations and implementation notes:**
+- Make the visibility toggle prominent in the watchlist UI and in the API response so users can change it per-entry and understand the current state.
+- Add a one-time onboarding tip explaining visibility defaults and how to change them.
+- Provide a user-level preference (in account settings) to set a default visibility (`public_by_default: true|false`) for power users who want the old behavior.
+- If we keep `public=True` for backwards compatibility, add an opt-in privacy-safe migration plan and a clear changelog message so users and integrators are aware.
+
+**How to verify in tests / QA:**
+- Unit test: create a `WatchlistEntry` without specifying `public` and assert the entry's `public` value equals the chosen default (False).
+- API/integration test: POST to the watchlist add endpoint and assert the returned `public` field matches the default; then explicitly toggle visibility and assert persistence.
+- Manual QA: Verify onboarding message appears, toggle is visible, and the user-level preference overrides entry-level defaults.
 
 ## Comment 5 — Sort order
 **My position:**
