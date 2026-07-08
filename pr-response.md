@@ -1,7 +1,12 @@
 # PR Response Doc — CineLog Watchlist Feature
 
 ## AI Usage
-<!-- Fill in at the end — how you used AI tools during this project -->
+I used AI assistance to help draft and tighten the written responses, then verified the repo state with editor, search, and test tools instead of relying on guesses.
+
+- Used workspace search and file inspection to trace the watchlist service, route, and test coverage.
+- Added support for removing films from the watchlist and covered the new behavior with regression tests.
+- Used AI to stress-test the arguments for Comment 4 and Comment 5, then rewrote them to match the maintainer's priorities and the project's actual behavior.
+- Ran the project's watchlist and full test suites in the configured venv to validate the final state.
 
 ## Comment 1 — Rename
 **What I did:**
@@ -97,5 +102,33 @@ If you'd like, I can implement the default change and add the `sort` query param
 	- `venv/`
 - I kept the final section minimal and de-duplicated to avoid future churn when rebasing.
 
+**How I verified no conflict remains:**
+- Ran `git status --short` to confirm there are no unmerged (`UU`) paths.
+- Scanned tracked files for merge markers (`<<<<<<<`, `=======`, `>>>>>>>`) to ensure none remain after resolution.
+- Re-ran the test command used during review (`pytest tests/ -v`) to ensure the resolved files do not introduce syntax/parse issues from conflict artifacts.
+
+## Comment 7 — Remove from watchlist
+**What I did:**
+- Implemented `remove_from_watchlist()` in `services/watchlist_service.py` so a user can remove an existing film from their watchlist after validating that the film exists and the watchlist entry is present.
+- Added regression tests in `tests/test_watchlist.py` for the successful removal path and the missing-entry error path.
+**How I verified:**
+- Ran `pytest tests/test_watchlist.py -v` and `pytest tests/ -v` after adding the model and tests.
+- Confirmed the service now removes entries cleanly and raises `AlreadyInWatchlistError` when the film is not already on the watchlist.
+
 ## PR Description
-<!-- Written at the end — feature overview, design decisions, manual testing steps -->
+This PR adds and documents the CineLog watchlist feature work.
+
+The watchlist lets a user save films they want to watch, removes entries through `remove_from_watchlist()`, prevents duplicate entries through `AlreadyInWatchlistError`, and exposes the watchlist through the route and service layer used by the project.
+
+Design decisions:
+- Visibility default: I recommend private by default (`public=False`) so a user's watchlist is not shared unless they choose to make it public.
+- Sort order: I recommend newest-first by `date_added` so the watchlist reflects what the user added most recently, while still allowing alternate sort options.
+
+Manual testing steps:
+1. Run the app in the project's virtual environment.
+2. Add a film to a user's watchlist through the API or existing watchlist route.
+3. Confirm the new entry appears in the watchlist response and that duplicates are rejected with `AlreadyInWatchlistError`.
+4. Verify the default visibility is private unless explicitly changed.
+5. Verify the default sort order is newest-first by `date_added`, and compare with an alternate sort if available.
+
+This PR also records the review responses covering the rename cleanup, deduplication logic, the rebase conflict resolution, and the two design decisions above.
