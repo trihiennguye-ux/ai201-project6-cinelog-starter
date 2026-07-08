@@ -62,8 +62,28 @@ I recommend changing the default to `public=False` (private-by-default). If we k
 
 ## Comment 5 — Sort order
 **My position:**
+Default to `date_added` (newest first) but expose explicit, documented sorting options (`date_added`, `title`) at the API/UI level and provide a per-user preference for default sorting.
+
 **Reasoning:**
-**Engagement with reviewer's point:**
+- Aligns with maintainer preference: The maintainer's ask to use `date_added` is well-motivated — watchlists are often a temporal queue (what I intend to watch soon), and showing recently added items first surface the user's current priorities.
+- User intent and discoverability: Newest-first helps users pick up where they left off and reduces friction for recently-added items (they're the ones a user most likely wants to act on). It also helps surface newly added content across the user base if we have social discovery features.
+- Preserve browseability: Alphabetical ordering is useful for browsing and locating a specific title. Rather than forcing a single mental model on all users, exposing a simple `sort` parameter and a per-account default gives power users the control they need while making the UI sensible for casual users.
+
+**Engagement with the maintainer's point:**
+- The maintainer argued for `date_added` to reflect recency; I agree this is the right default behaviour for the majority of watchlist use-cases. Where the maintainer's concern is discoverability for features like curated lists or public watchlists, we can still support alphabetical or other ordering in those contexts explicitly (e.g., a public listing endpoint could default to `title` for easier scanning).
+- If the maintainer's worry is breaking existing integrations that depend on alphabetical order, we should treat this as a breaking change: document it in the changelog, and offer a transitional toggle (user/account default or an API query parameter) so integrators can opt-in/opt-out.
+
+**Implementation notes:**
+- Change `get_watchlist(user_id)` in `services/watchlist_service.py` to order by `WatchlistEntry.date_added.desc()` (newest first) rather than `Film.title.asc()`.
+- Add an optional `sort` parameter to the route in `routes/watchlist/watchlist.py` (query param) so callers can override the default. Example: `GET /watchlist/<user_id>?sort=title`.
+- Add a user preference (e.g., `watchlist_sort_default`) in account settings to persist a user's preferred sort order.
+
+**Tests / QA:**
+- Unit test: create multiple `WatchlistEntry` objects with differing `date_added` values and assert `get_watchlist()` returns items in newest-first order by default.
+- Integration/API test: request the watchlist with `?sort=title` and assert the returned list is alphabetically ordered by `title`.
+- Backward compatibility test: if switching the default, add a test that exercises the user/account preference override so existing integrations can be validated.
+
+If you'd like, I can implement the default change and add the `sort` query parameter and tests in a follow-up patch; otherwise I can prepare a small, focused PR that only updates the default ordering and test coverage.
 
 ## Comment 6 — Rebase
 **What conflicted:**
