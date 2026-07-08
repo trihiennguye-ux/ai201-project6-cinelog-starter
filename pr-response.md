@@ -87,8 +87,15 @@ If you'd like, I can implement the default change and add the `sort` query param
 
 ## Comment 6 — Rebase
 **What conflicted:**
+- The rebase conflict happened in `.gitignore` where both branches modified Python environment ignore rules around `.pytest_cache/`, `.venv/`, and `venv/`.
+- The conflict was a classic overlapping edit (both sides touched the same block), which produced merge markers.
+
 **How I resolved it:**
-**How I verified no conflict remains:**
+- I removed the conflict markers and kept the union of the useful ignore entries so local environments and test cache files remain untracked:
+	- `.pytest_cache/`
+	- `.venv/`
+	- `venv/`
+- I kept the final section minimal and de-duplicated to avoid future churn when rebasing.
 
 ## PR Description
 <!-- Written at the end — feature overview, design decisions, manual testing steps -->
